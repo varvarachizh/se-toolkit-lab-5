@@ -7,7 +7,7 @@ from app.settings import settings
 
 security = HTTPBearer()
 
-
+# funct
 def verify_api_key(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> str:
