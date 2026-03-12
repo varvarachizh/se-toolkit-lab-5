@@ -1,7 +1,11 @@
 import { useState, useEffect, useReducer, FormEvent } from 'react'
 import './App.css'
+import Dashboard from './Dashboard'  // ← Импорт компонента Dashboard
 
 const STORAGE_KEY = 'api_key'
+
+// ← Тип для навигации между страницами
+type Page = 'items' | 'dashboard'
 
 interface Item {
   id: number
@@ -38,6 +42,9 @@ function App() {
   )
   const [draft, setDraft] = useState('')
   const [fetchState, dispatch] = useReducer(fetchReducer, { status: 'idle' })
+  
+  // ← Состояние для текущей страницы (навигация)
+  const [currentPage, setCurrentPage] = useState<Page>('items')
 
   useEffect(() => {
     if (!token) return
@@ -71,6 +78,7 @@ function App() {
     setDraft('')
   }
 
+  // ← Экран входа (если нет токена)
   if (!token) {
     return (
       <form className="token-form" onSubmit={handleConnect}>
@@ -87,40 +95,64 @@ function App() {
     )
   }
 
+  // ← Основной экран (после входа)
   return (
     <div>
+      {/* ← Header с навигацией */}
       <header className="app-header">
-        <h1>Items</h1>
+        <nav className="nav-buttons">
+          <button
+            className={currentPage === 'items' ? 'active' : ''}
+            onClick={() => setCurrentPage('items')}
+          >
+            Items
+          </button>
+          <button
+            className={currentPage === 'dashboard' ? 'active' : ''}
+            onClick={() => setCurrentPage('dashboard')}
+          >
+            Dashboard
+          </button>
+        </nav>
         <button className="btn-disconnect" onClick={handleDisconnect}>
           Disconnect
         </button>
       </header>
 
-      {fetchState.status === 'loading' && <p>Loading...</p>}
-      {fetchState.status === 'error' && <p>Error: {fetchState.message}</p>}
+      {/* ← Контент в зависимости от текущей страницы */}
+      <main>
+        {currentPage === 'items' && (
+          <>
+            {fetchState.status === 'loading' && <p>Loading...</p>}
+            {fetchState.status === 'error' && <p>Error: {fetchState.message}</p>}
 
-      {fetchState.status === 'success' && (
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>ItemType</th>
-              <th>Title</th>
-              <th>Created at</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fetchState.items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.type}</td>
-                <td>{item.title}</td>
-                <td>{item.created_at}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            {fetchState.status === 'success' && (
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>ItemType</th>
+                    <th>Title</th>
+                    <th>Created at</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fetchState.items.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.id}</td>
+                      <td>{item.type}</td>
+                      <td>{item.title}</td>
+                      <td>{item.created_at}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+
+        {currentPage === 'dashboard' && <Dashboard />}
+      </main>
     </div>
   )
 }
